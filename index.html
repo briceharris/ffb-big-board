@@ -11,7 +11,7 @@
       --muted: #a9b6d6;
       --border: #1f2b44;
 
-      --accent: #6ea8ff;
+      --accent: #5fa8d3;
       --accentSoft: rgba(110, 168, 255, .14);
 
       --qb: rgba(0, 180, 255, .9);
@@ -347,6 +347,11 @@
       width: 100%;
       accent-color: var(--accent);
     }
+    /* ---------- Position Multiplier Slider Colors ---------- */
+    #m_qb { accent-color: var(--qb); }
+    #m_rb { accent-color: var(--rb); }
+    #m_wr { accent-color: var(--wr); }
+    #m_te { accent-color: var(--te); }
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
       border-radius: 999px;
@@ -656,6 +661,11 @@
       font-weight: 850;
       font-size: 12px;
     }
+    .presetBtn.active{
+      border-color: rgba(120, 170, 255, .85);
+      background: rgba(120, 170, 255, .14);
+      box-shadow: 0 0 0 4px rgba(120, 170, 255, .10);
+    }
     .presetBtn:hover{
       border-color: rgba(160,190,255,.65);
       box-shadow: 0 0 0 4px rgba(120, 170, 255, .10);
@@ -802,7 +812,7 @@
           <div class="brand-sub">Interactive Rankings • Sliders • Real Data</div>
         </div>
       </div>
-      <span class="versionBadge">v1.05 • Updated Feb 19, 2026</span>
+      <span class="versionBadge">v1.06 • Updated Feb 19, 2026</span>
     </div>
 
     <div class="topbar-right">
@@ -2905,6 +2915,7 @@ Decrease (-): New coaching staff is valued less">
           r.cells[4].textContent = p + String(posCounts[p]);
         }
 
+        syncPresetHighlight();
         applyFilters();
       }
 
@@ -2973,7 +2984,11 @@ Decrease (-): New coaching staff is valued less">
         ...Object.values(te),
       ].filter(Boolean);
 
-      allSliders.forEach(el => el.addEventListener('input', rerankAndResort));
+      allSliders.forEach(el => el.addEventListener('input', () => {
+        if (!applyingPreset) clearActivePresetButton();
+        rerankAndResort();
+      }));
+
 
       resetBtn.addEventListener("click", () => {
         allSliders.forEach(s => {
@@ -2982,11 +2997,15 @@ Decrease (-): New coaching staff is valued less">
         });
         rerankAndResort();
         setBaselineRanksClearArrows(Array.from(tbody.rows));
+
+        clearActivePresetButton();
+        setActivePresetButton("balanced");
+
         // wipe URL params
         const url = new URL(window.location.href);
         url.search = "";
         window.history.replaceState({}, "", url.toString());
-        showToast("Reset to Balanced ✅");
+        showToast("Reset to Default ✅");
       });
 
       // ---------------- Presets ----------------
@@ -3066,9 +3085,32 @@ Decrease (-): New coaching staff is valued less">
         }
       };
 
+      // ✅ Highlight helpers
+      function setActivePresetButton(key) {
+        document.querySelectorAll('.presetBtn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.presetBtn[data-preset="${key}"]`);
+        if (btn) btn.classList.add('active');
+      }
+      function clearActivePresetButton() {
+        document.querySelectorAll('.presetBtn').forEach(b => b.classList.remove('active'));
+      }
+
+      // ✅ Prevent clearing while a preset is applying
+      let applyingPreset = false;
+
       function setAllSlidersToZero() {
         allSliders.forEach(s => { if (s) s.value = "0"; });
       }
+
+      function allSlidersAreZero() {
+        return allSliders.every(s => Math.abs(sliderOffset(s)) <= 1e-9);
+      }
+
+      function syncPresetHighlight() {
+        if (allSlidersAreZero()) setActivePresetButton("balanced");
+        else clearActivePresetButton();
+      }
+
 
       function setSliderScaled(id, scaledValue) {
         const s = document.getElementById(id);
@@ -3095,6 +3137,8 @@ Decrease (-): New coaching staff is valued less">
         const preset = PRESETS[presetKey];
         if (!preset) return;
 
+        applyingPreset = true;
+
         // Always start from baseline so presets are consistent
         setAllSlidersToZero();
 
@@ -3108,6 +3152,11 @@ Decrease (-): New coaching staff is valued less">
         // One rerank after all values are set
         rerankAndResort();
 
+        // ✅ highlight selected preset
+        setActivePresetButton(presetKey);
+
+        applyingPreset = false;
+
         // ✅ toast + tab focus
         showToast(`Applied: ${preset.name} ✅`);
         setTab("presets");
@@ -3120,6 +3169,7 @@ Decrease (-): New coaching staff is valued less">
         const key = btn.getAttribute("data-preset");
         applyPreset(key);
       });
+
 
       // ---------------- Theme toggle ----------------
       const themeToggle = g('themeToggle');
@@ -3229,6 +3279,7 @@ Decrease (-): New coaching staff is valued less">
       initTooltips();
       rerankAndResort();
       setBaselineRanksClearArrows(Array.from(tbody.rows));
+      syncPresetHighlight();
     })();
   </script>
 </body>

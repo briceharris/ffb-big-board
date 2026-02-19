@@ -611,7 +611,7 @@
 
     .tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -639,6 +639,65 @@
     }
 
     .panel.hidden { display: none; }
+
+    .presetGrid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .presetBtn{
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 850;
+      font-size: 12px;
+    }
+    .presetBtn:hover{
+      border-color: rgba(160,190,255,.65);
+      box-shadow: 0 0 0 4px rgba(120, 170, 255, .10);
+    }
+    .presetNote{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.25;
+    }
+
+    /* ✅ Preset toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      z-index: 2000;
+      background: rgba(0, 255, 170, .12);
+      border: 1px solid rgba(0, 255, 170, .45);
+      color: rgba(220, 255, 244, 1);
+      padding: 10px 12px;
+      border-radius: 14px;
+      box-shadow: 0 14px 40px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .02em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(6px);
+    }
+    body[data-theme="light"] .toast {
+      background: rgba(0, 255, 170, .10);
+      border-color: rgba(15, 30, 60, .18);
+      color: var(--text);
+      box-shadow: 0 14px 40px rgba(0,0,0,.16);
+    }
 
     /* --- Help modal --- */
     .modalOverlay {
@@ -731,6 +790,9 @@
 </head>
 <body data-theme="dark">
 
+  <!-- ✅ Toast (for presets, share copy, etc.) -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <header class="topbar">
     <div class="topbar-left">
       <div class="brand">
@@ -740,7 +802,7 @@
           <div class="brand-sub">Interactive Rankings • Sliders • Real Data</div>
         </div>
       </div>
-      <span class="versionBadge">v1.03 • Updated Feb 19, 2026</span>
+      <span class="versionBadge">v1.05 • Updated Feb 19, 2026</span>
     </div>
 
     <div class="topbar-right">
@@ -772,7 +834,8 @@
 
       <div class="tabs" role="tablist" aria-label="Sidebar Tabs">
         <button id="tabWeights" class="tabbtn active" type="button" role="tab" aria-selected="true">Weights</button>
-        <button id="tabAdvanced" class="tabbtn" type="button" role="tab" aria-selected="false">Advanced Adjustments</button>
+        <button id="tabPresets" class="tabbtn" type="button" role="tab" aria-selected="false">Presets</button>
+        <button id="tabAdvanced" class="tabbtn" type="button" role="tab" aria-selected="false">Advanced</button>
       </div>
 
       <!-- Panel: Weights -->
@@ -797,7 +860,9 @@ Decrease (-):  Age, Team Context, and Injuries are valued more | PPG data is val
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="w_proj" title="Decrease">−</button>
-            <input id="w_proj" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.0">
+            <input id="w_proj" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.0" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="w_proj" title="Increase">+</button>
           </div>
           <span id="w_proj_val" class="val">0.00</span>
@@ -820,7 +885,9 @@ Decrease (-):  Health isn't valued as much | Injury History matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="w_inj" title="Decrease">−</button>
-            <input id="w_inj" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.0325">
+            <input id="w_inj" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.0325" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="w_inj" title="Increase">+</button>
           </div>
           <span id="w_inj_val" class="val">0.00</span>
@@ -843,7 +910,9 @@ Decrease (-):  Historical Age/Experience trends are valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="w_dev" title="Decrease">−</button>
-            <input id="w_dev" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.03">
+            <input id="w_dev" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.03" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="w_dev" title="Increase">+</button>
           </div>
           <span id="w_dev_val" class="val">0.00</span>
@@ -866,7 +935,9 @@ Decrease (-): Team situation matters less across ALL positions">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="w_team" title="Decrease">−</button>
-            <input id="w_team" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.0325">
+            <input id="w_team" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.0325" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="w_team" title="Increase">+</button>
           </div>
           <span id="w_team_val" class="val">0.00</span>
@@ -893,7 +964,9 @@ Decrease (-):  QBs as a whole are valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="m_qb" title="Decrease">−</button>
-            <input id="m_qb" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.0">
+            <input id="m_qb" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.0" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="m_qb" title="Increase">+</button>
           </div>
           <span id="m_qb_val" class="val">0.00</span>
@@ -916,7 +989,9 @@ Decrease (-):  RBs as a whole are valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="m_rb" title="Decrease">−</button>
-            <input id="m_rb" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.09">
+            <input id="m_rb" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.09" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="m_rb" title="Increase">+</button>
           </div>
           <span id="m_rb_val" class="val">0.00</span>
@@ -939,7 +1014,9 @@ Decrease (-):  WRs as a whole are valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="m_wr" title="Decrease">−</button>
-            <input id="m_wr" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.08">
+            <input id="m_wr" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.08" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="m_wr" title="Increase">+</button>
           </div>
           <span id="m_wr_val" class="val">0.00</span>
@@ -962,12 +1039,34 @@ Decrease (-):  TEs as a whole are valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="m_te" title="Decrease">−</button>
-            <input id="m_te" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.07">
+            <input id="m_te" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.07" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="m_te" title="Increase">+</button>
           </div>
           <span id="m_te_val" class="val">0.00</span>
         </label>
         
+        </div>
+      </div>
+
+      <!-- Panel: Presets -->
+      <div id="panelPresets" class="panel hidden" role="tabpanel">
+        <div class="card">
+          <div class="card-title">Draft Presets</div>
+
+          <div class="presetGrid">
+            <button class="presetBtn" type="button" data-preset="balanced">Default</button>
+            <button class="presetBtn" type="button" data-preset="high_floor">High Floor</button>
+            <button class="presetBtn" type="button" data-preset="high_risk">High Ceiling</button>
+            <button class="presetBtn" type="button" data-preset="talent_over_team">Talent Over Team</button>
+            <button class="presetBtn" type="button" data-preset="situation_max">Team Over Talent</button>
+            <button class="presetBtn" type="button" data-preset="zero_rb">Zero RB</button>
+          </div>
+
+          <div class="presetNote">
+            Presets set multiple sliders at once (starting from 0). You can still fine-tune after.
+          </div>
         </div>
       </div>
 
@@ -996,7 +1095,9 @@ Decrease (-): QB prime shifts younger">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_help_age" title="Decrease">−</button>
-            <input id="qb_help_age" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="27.0">
+            <input id="qb_help_age" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="27.0" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_help_age" title="Increase">+</button>
           </div>
           <span id="qb_help_age_val" class="val">0.00</span>
@@ -1023,7 +1124,9 @@ Decrease (-): RBs peak earlier">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_peak_age" title="Decrease">−</button>
-            <input id="rb_peak_age" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="23.5">
+            <input id="rb_peak_age" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="23.5" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_peak_age" title="Increase">+</button>
           </div>
           <span id="rb_peak_age_val" class="val">0.00</span>
@@ -1046,7 +1149,9 @@ Decrease (-): RB falloff happens sooner">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_old_start" title="Decrease">−</button>
-            <input id="rb_old_start" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="27.0">
+            <input id="rb_old_start" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="27.0" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_old_start" title="Increase">+</button>
           </div>
           <span id="rb_old_start_val" class="val">0.00</span>
@@ -1073,7 +1178,9 @@ Decrease (-): WRs peak earlier">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_prime_age" title="Decrease">−</button>
-            <input id="wr_prime_age" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="26.0">
+            <input id="wr_prime_age" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="26.0" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_prime_age" title="Increase">+</button>
           </div>
           <span id="wr_prime_age_val" class="val">0.00</span>
@@ -1096,7 +1203,9 @@ Decrease (-): WR falloff happens sooner">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_old_start" title="Decrease">−</button>
-            <input id="wr_old_start" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="30.0">
+            <input id="wr_old_start" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="30.0" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_old_start" title="Increase">+</button>
           </div>
           <span id="wr_old_start_val" class="val">0.00</span>
@@ -1123,7 +1232,9 @@ Decrease (-): TE prime shifts younger">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_help_age" title="Decrease">−</button>
-            <input id="te_help_age" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" data-base="26.5">
+            <input id="te_help_age" type="range"
+                   min="-5.0" max="5.0" step="0.1" value="0"
+                   data-base="26.5" data-scale="1.0">
             <button class="nudge" type="button" data-nudge="1" data-target="te_help_age" title="Increase">+</button>
           </div>
           <span id="te_help_age_val" class="val">0.00</span>
@@ -1154,7 +1265,9 @@ Decrease (-): Overall Team Offense matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_offense" title="Decrease">−</button>
-            <input id="qb_offense" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.4">
+            <input id="qb_offense" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.4" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_offense" title="Increase">+</button>
           </div>
           <span id="qb_offense_val" class="val">0.00</span>
@@ -1177,7 +1290,9 @@ Decrease (-): O-line matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_oline" title="Decrease">−</button>
-            <input id="qb_oline" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.25">
+            <input id="qb_oline" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.25" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_oline" title="Increase">+</button>
           </div>
           <span id="qb_oline_val" class="val">0.00</span>
@@ -1200,7 +1315,9 @@ Decrease (-): Team Pass Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_pass_rate" title="Decrease">−</button>
-            <input id="qb_pass_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.2">
+            <input id="qb_pass_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.2" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_pass_rate" title="Increase">+</button>
           </div>
           <span id="qb_pass_rate_val" class="val">0.00</span>
@@ -1223,7 +1340,9 @@ Decrease (-): Pace matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_pace" title="Decrease">−</button>
-            <input id="qb_pace" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.2">
+            <input id="qb_pace" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.2" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_pace" title="Increase">+</button>
           </div>
           <span id="qb_pace_val" class="val">0.00</span>
@@ -1246,7 +1365,9 @@ Decrease (-): Team Run Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_run_rate" title="Decrease">−</button>
-            <input id="qb_run_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.15">
+            <input id="qb_run_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.15" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_run_rate" title="Increase">+</button>
           </div>
           <span id="qb_run_rate_val" class="val">0.00</span>
@@ -1269,7 +1390,9 @@ Decrease (-): QB play matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_qb_play" title="Decrease">−</button>
-            <input id="qb_qb_play" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.5">
+            <input id="qb_qb_play" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.5" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_qb_play" title="Increase">+</button>
           </div>
           <span id="qb_qb_play_val" class="val">0.00</span>
@@ -1294,7 +1417,9 @@ NOTE: Having a rushing QB harms RBs value but boosts QBs value">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_rushing_qb" title="Decrease">−</button>
-            <input id="qb_rushing_qb" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.75">
+            <input id="qb_rushing_qb" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.75" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_rushing_qb" title="Increase">+</button>
           </div>
           <span id="qb_rushing_qb_val" class="val">0.00</span>
@@ -1317,7 +1442,9 @@ Decrease (-): New coaching staff is valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="qb_scheme" title="Decrease">−</button>
-            <input id="qb_scheme" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.0">
+            <input id="qb_scheme" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.0" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="qb_scheme" title="Increase">+</button>
           </div>
           <span id="qb_scheme_val" class="val">0.00</span>
@@ -1344,7 +1471,9 @@ Decrease (-): O-line matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_oline" title="Decrease">−</button>
-            <input id="rb_oline" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.45">
+            <input id="rb_oline" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.45" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_oline" title="Increase">+</button>
           </div>
           <span id="rb_oline_val" class="val">0.00</span>
@@ -1367,7 +1496,9 @@ Decrease (-): Overall Team Offense matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_offense" title="Decrease">−</button>
-            <input id="rb_offense" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.35">
+            <input id="rb_offense" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.35" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_offense" title="Increase">+</button>
           </div>
           <span id="rb_offense_val" class="val">0.00</span>
@@ -1390,7 +1521,9 @@ Decrease (-): Pace matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_pace" title="Decrease">−</button>
-            <input id="rb_pace" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.2">
+            <input id="rb_pace" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.2" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_pace" title="Increase">+</button>
           </div>
           <span id="rb_pace_val" class="val">0.00</span>
@@ -1413,7 +1546,9 @@ Decrease (-): Team Run Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_run_rate" title="Decrease">−</button>
-            <input id="rb_run_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.4">
+            <input id="rb_run_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.4" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_run_rate" title="Increase">+</button>
           </div>
           <span id="rb_run_rate_val" class="val">0.00</span>
@@ -1436,7 +1571,9 @@ Decrease (-): Having a RB by Committee is penalized more">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_rb_committee" title="Decrease">−</button>
-            <input id="rb_rb_committee" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.1">
+            <input id="rb_rb_committee" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.1" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_rb_committee" title="Increase">+</button>
           </div>
           <span id="rb_rb_committee_val" class="val">0.00</span>
@@ -1461,7 +1598,9 @@ NOTE: Having a rushing QB harms RBs value but boosts QBs value">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_rushing_qb" title="Decrease">−</button>
-            <input id="rb_rushing_qb" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.25">
+            <input id="rb_rushing_qb" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.25" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_rushing_qb" title="Increase">+</button>
           </div>
           <span id="rb_rushing_qb_val" class="val">0.00</span>
@@ -1484,7 +1623,9 @@ Decrease (-): New coaching staff is valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="rb_scheme" title="Decrease">−</button>
-            <input id="rb_scheme" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.6">
+            <input id="rb_scheme" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.6" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="rb_scheme" title="Increase">+</button>
           </div>
           <span id="rb_scheme_val" class="val">0.00</span>
@@ -1511,7 +1652,9 @@ Decrease (-): Team Pass Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_pass_rate" title="Decrease">−</button>
-            <input id="wr_pass_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.45">
+            <input id="wr_pass_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.45" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_pass_rate" title="Increase">+</button>
           </div>
           <span id="wr_pass_rate_val" class="val">0.00</span>
@@ -1534,7 +1677,9 @@ Decrease (-): Overall Team Offense matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_offense" title="Decrease">−</button>
-            <input id="wr_offense" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.4">
+            <input id="wr_offense" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.4" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_offense" title="Increase">+</button>
           </div>
           <span id="wr_offense_val" class="val">0.00</span>
@@ -1557,7 +1702,9 @@ Decrease (-): Pace matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_pace" title="Decrease">−</button>
-            <input id="wr_pace" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.15">
+            <input id="wr_pace" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.15" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_pace" title="Increase">+</button>
           </div>
           <span id="wr_pace_val" class="val">0.00</span>
@@ -1580,7 +1727,9 @@ Decrease (-): Team Run Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_run_rate" title="Decrease">−</button>
-            <input id="wr_run_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.2">
+            <input id="wr_run_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.2" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_run_rate" title="Increase">+</button>
           </div>
           <span id="wr_run_rate_val" class="val">0.00</span>
@@ -1603,7 +1752,9 @@ Decrease (-): QB play matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_qb_play" title="Decrease">−</button>
-            <input id="wr_qb_play" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.55">
+            <input id="wr_qb_play" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.55" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_qb_play" title="Increase">+</button>
           </div>
           <span id="wr_qb_play_val" class="val">0.00</span>
@@ -1626,7 +1777,9 @@ Decrease (-): New coaching staff is valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="wr_scheme" title="Decrease">−</button>
-            <input id="wr_scheme" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.0">
+            <input id="wr_scheme" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.0" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="wr_scheme" title="Increase">+</button>
           </div>
           <span id="wr_scheme_val" class="val">0.00</span>
@@ -1653,7 +1806,9 @@ Decrease (-): Overall Team Offense matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_offense" title="Decrease">−</button>
-            <input id="te_offense" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.45">
+            <input id="te_offense" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.45" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_offense" title="Increase">+</button>
           </div>
           <span id="te_offense_val" class="val">0.00</span>
@@ -1676,7 +1831,9 @@ Decrease (-): Team Pass Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_pass_rate" title="Decrease">−</button>
-            <input id="te_pass_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.35">
+            <input id="te_pass_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.35" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_pass_rate" title="Increase">+</button>
           </div>
           <span id="te_pass_rate_val" class="val">0.00</span>
@@ -1699,7 +1856,9 @@ Decrease (-): Pace matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_pace" title="Decrease">−</button>
-            <input id="te_pace" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.2">
+            <input id="te_pace" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.2" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_pace" title="Increase">+</button>
           </div>
           <span id="te_pace_val" class="val">0.00</span>
@@ -1722,7 +1881,9 @@ Decrease (-): Team Run Rate matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_run_rate" title="Decrease">−</button>
-            <input id="te_run_rate" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="-0.1">
+            <input id="te_run_rate" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="-0.1" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_run_rate" title="Increase">+</button>
           </div>
           <span id="te_run_rate_val" class="val">0.00</span>
@@ -1745,7 +1906,9 @@ Decrease (-): QB play matters less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_qb_play" title="Decrease">−</button>
-            <input id="te_qb_play" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="0.35">
+            <input id="te_qb_play" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="0.35" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_qb_play" title="Increase">+</button>
           </div>
           <span id="te_qb_play_val" class="val">0.00</span>
@@ -1768,7 +1931,9 @@ Decrease (-): New coaching staff is valued less">
         </span>
           <div class="rangebox">
             <button class="nudge" type="button" data-nudge="-1" data-target="te_scheme" title="Decrease">−</button>
-            <input id="te_scheme" type="range" min="-2.0" max="2.0" step="0.01" value="0.0" data-base="1.0">
+            <input id="te_scheme" type="range"
+                   min="-10" max="10" step="1" value="0"
+                   data-base="1.0" data-scale="0.01">
             <button class="nudge" type="button" data-nudge="1" data-target="te_scheme" title="Increase">+</button>
           </div>
           <span id="te_scheme_val" class="val">0.00</span>
@@ -2042,6 +2207,33 @@ Decrease (-): New coaching staff is valued less">
 
       const EPS = 1e-12;
 
+      // ✅ toast helper
+      const toastEl = g('toast');
+      let toastTimer = null;
+      function showToast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg || "";
+        toastEl.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1200);
+      }
+
+      // ✅ scale helpers (sliders store -10..10 but represent -0.10..0.10 when scale=0.01)
+      function sliderScale(slider) {
+        const sc = parseFloat(slider?.dataset?.scale || "1");
+        return Number.isFinite(sc) ? sc : 1;
+      }
+      function sliderOffset(slider) {
+        const raw = parseFloat(slider?.value || "0");
+        const v = Number.isFinite(raw) ? raw : 0;
+        return v * sliderScale(slider);
+      }
+
+      function sliderRaw(slider) {
+        const raw = parseFloat(slider?.value || "0");
+        return Number.isFinite(raw) ? raw : 0;
+      }
+
       // base weights (OFFSET sliders)
       const wProj = g('w_proj');
       const wInj  = g('w_inj');
@@ -2081,26 +2273,35 @@ Decrease (-): New coaching staff is valued less">
       // Cache ALL rows once (we'll render a fixed subset)
       const allRows = Array.from(tbody.rows);
 
-      // ---- Sidebar tab toggle ----
-      const tabWeights = g('tabWeights');
+      // ---- Sidebar tab toggle (3 tabs) ----
+      const tabWeights  = g('tabWeights');
+      const tabPresets  = g('tabPresets');
       const tabAdvanced = g('tabAdvanced');
-      const panelWeights = g('panelWeights');
+
+      const panelWeights  = g('panelWeights');
+      const panelPresets  = g('panelPresets');
       const panelAdvanced = g('panelAdvanced');
 
       function setTab(which) {
-        const isWeights = which === "weights";
+        const isWeights  = which === "weights";
+        const isPresets  = which === "presets";
+        const isAdvanced = which === "advanced";
 
-        tabWeights.classList.toggle('active', isWeights);
-        tabAdvanced.classList.toggle('active', !isWeights);
+        tabWeights.classList.toggle('active',  isWeights);
+        tabPresets.classList.toggle('active',  isPresets);
+        tabAdvanced.classList.toggle('active', isAdvanced);
 
-        tabWeights.setAttribute('aria-selected', isWeights ? 'true' : 'false');
-        tabAdvanced.setAttribute('aria-selected', !isWeights ? 'true' : 'false');
+        tabWeights.setAttribute('aria-selected',  isWeights ? 'true' : 'false');
+        tabPresets.setAttribute('aria-selected',  isPresets ? 'true' : 'false');
+        tabAdvanced.setAttribute('aria-selected', isAdvanced ? 'true' : 'false');
 
-        panelWeights.classList.toggle('hidden', !isWeights);
-        panelAdvanced.classList.toggle('hidden', isWeights);
+        panelWeights.classList.toggle('hidden',  !isWeights);
+        panelPresets.classList.toggle('hidden',  !isPresets);
+        panelAdvanced.classList.toggle('hidden', !isAdvanced);
       }
 
-      tabWeights.addEventListener('click', () => setTab("weights"));
+      tabWeights.addEventListener('click',  () => setTab("weights"));
+      tabPresets.addEventListener('click',  () => setTab("presets"));
       tabAdvanced.addEventListener('click', () => setTab("advanced"));
 
       // ---------------- Dev age sliders (CENTER ONLY) ----------------
@@ -2326,15 +2527,14 @@ Decrease (-): New coaching staff is valued less">
 
       function coefWithBase(slider) {
         const base = parseFloat(slider?.dataset?.base || "0");
-        const off  = parseFloat(slider?.value || "0");
+        const off  = sliderOffset(slider);
         return base + off;
       }
 
       function ageShown(slider) {
         if (!slider) return 0;
-        return coefWithBase(slider); // base default + offset
+        return coefWithBase(slider); // base default + offset (years)
       }
-
 
       function getCoefs(group) {
         const c = {};
@@ -2359,7 +2559,6 @@ Decrease (-): New coaching staff is valued less">
         const d = (decimals === undefined) ? 2 : decimals;
         el.textContent = Number(v).toFixed(d) + suffix;
       }
-
 
       function updateAllLabels() {
         const labelPairs = [
@@ -2393,19 +2592,31 @@ Decrease (-): New coaching staff is valued less">
           );
 
           if (isAgeCutoff) {
-            setVal(vid, ageShown(s), 1, " yrs");   // display as years (1 decimal looks best)
+            setVal(vid, ageShown(s), 1, " yrs"); // years shown as base+offset
           } else {
-            setVal(vid, s.value, dec);     // keep offsets for weights/multipliers
+            const sc = sliderScale(s);
+            if (sc !== 1) {
+              // show -10..10 in the UI
+              setVal(vid, sliderRaw(s), 0);
+            } else {
+              // scale=1 sliders can show their real value (or offset)
+              setVal(vid, sliderOffset(s), dec);
+            }
           }
         }
 
+        const groups = [qb, rb, wr, te];
+        for (const group of groups) {
+          for (const slider of Object.values(group)) {
+            if (!slider || !slider.id) continue;
 
-        const groups = [['qb', qb], ['rb', rb], ['wr', wr], ['te', te]];
-        for (const [pfx, group] of groups) {
-          for (const key of Object.keys(group)) {
-            const slider = group[key];
-            if (!slider) continue;
-            setVal(`${pfx}_${key}_val`, slider.value, 2);
+            const valId = slider.id + "_val";
+            const sc = sliderScale(slider);
+
+            if (sc !== 1)
+              setVal(valId, sliderRaw(slider), 0);   // show -10..10
+            else
+              setVal(valId, sliderOffset(slider), 2);
           }
         }
 
@@ -2413,7 +2624,7 @@ Decrease (-): New coaching staff is valued less">
       }
 
       function offsetsAreZero(group) {
-        return Object.values(group).filter(Boolean).every(sl => Math.abs(parseFloat(sl.value || "0")) <= 1e-9);
+        return Object.values(group).filter(Boolean).every(sl => Math.abs(sliderOffset(sl)) <= 1e-9);
       }
       function allComponentOffsetsZero() {
         return offsetsAreZero(qb) && offsetsAreZero(rb) && offsetsAreZero(wr) && offsetsAreZero(te);
@@ -2426,7 +2637,8 @@ Decrease (-): New coaching staff is valued less">
           devCuts.TE.help_age,
           devCuts.QB.help_age,
         ].filter(Boolean);
-        return all.every(sl => Math.abs(parseFloat(sl.value || "0")) <= 1e-9);
+        // dev cut sliders are years scale=1, so sliderOffset is fine here too
+        return all.every(sl => Math.abs(sliderOffset(sl)) <= 1e-9);
       }
 
       function clip01(x) { return Math.max(0, Math.min(1, x)); }
@@ -2554,7 +2766,6 @@ Decrease (-): New coaching staff is valued less">
         const MAJOR_INJURY_ALPHA = 0.10;
         const MAJOR_INJURY_FLOOR = 0.85;
 
-
         const w = {
           proj: coefWithBase(wProj),
           inj:  coefWithBase(wInj),
@@ -2638,7 +2849,6 @@ Decrease (-): New coaching staff is valued less">
 
           const score = ((base * posMult(pos, m)) * rely) * factor;
 
-
           row.dataset.liveScore = String(score);
           row.dataset.liveScoreAdj = String(score);
         }
@@ -2701,11 +2911,11 @@ Decrease (-): New coaching staff is valued less">
       function nudgeSlider(slider, direction, evt) {
         if (!slider) return;
 
-        const min = parseFloat(slider.min || "-2");
-        const max = parseFloat(slider.max || "2");
+        const min = parseFloat(slider.min || "-10");
+        const max = parseFloat(slider.max || "10");
         const cur = parseFloat(slider.value || "0");
 
-        const baseStep = parseFloat(slider.step || "0.01");
+        const baseStep = parseFloat(slider.step || "1");
         const step = (evt && evt.shiftKey) ? (baseStep * 5) : baseStep;
 
         let next = cur + (direction * step);
@@ -2768,7 +2978,7 @@ Decrease (-): New coaching staff is valued less">
       resetBtn.addEventListener("click", () => {
         allSliders.forEach(s => {
           if (!s) return;
-          s.value = "0.0";
+          s.value = "0";
         });
         rerankAndResort();
         setBaselineRanksClearArrows(Array.from(tbody.rows));
@@ -2776,6 +2986,139 @@ Decrease (-): New coaching staff is valued less">
         const url = new URL(window.location.href);
         url.search = "";
         window.history.replaceState({}, "", url.toString());
+        showToast("Reset to Balanced ✅");
+      });
+
+      // ---------------- Presets ----------------
+
+      // Presets are stored as SCALED offsets (the "real" numbers), not raw.
+      // Example: +0.07 means sliderOffset should become 0.07.
+      // We'll convert to raw via: raw = scaled / scale.
+      const PRESETS = {
+        balanced: {
+          name: "Default (Reset)",
+          values: {
+            // empty on purpose: reset-to-zero is the preset
+          }
+        },
+
+        high_floor: {
+          name: "High Floor",
+          values: {
+            w_inj:  +0.08,
+            w_team: +0.04,
+            w_dev:  +0.02,
+            w_proj: -0.02,
+            m_rb:   +0.02,
+            m_wr:   +0.02
+          }
+        },
+
+        high_risk: {
+          name: "High Ceiling",
+          values: {
+            w_inj:  -0.08,
+            w_proj: +0.06,
+            w_dev:  +0.03,
+            w_team: -0.02,
+            m_wr:   +0.02,
+            m_qb:   +0.01
+          }
+        },
+
+        talent_over_team: {
+          name: "Talent Over Team",
+          values: {
+            w_team: -0.08,
+            w_proj: +0.04,
+            w_dev:  +0.02,
+            m_te:   -0.01
+          }
+        },
+
+        situation_max: {
+          name: "Team Over Talent",
+          values: {
+            w_team: +0.10,
+            w_proj: -0.01,
+            wr_qb_play:  +0.06,
+            te_qb_play:  +0.06,
+            rb_oline:    +0.06,
+            qb_offense:  +0.04,
+            wr_pass_rate:+0.04,
+            te_pass_rate:+0.04,
+            qb_pace:     +0.02,
+            wr_pace:     +0.02
+          }
+        },
+
+        zero_rb: {
+          name: "Zero RB",
+          values: {
+            m_rb:   -0.08,
+            m_te:   +0.02,
+            m_wr:   +0.01,
+            w_inj:  -0.04,
+            w_team: -0.02,
+            wr_qb_play:  +0.05,
+            wr_pass_rate:+0.04
+          }
+        }
+      };
+
+      function setAllSlidersToZero() {
+        allSliders.forEach(s => { if (s) s.value = "0"; });
+      }
+
+      function setSliderScaled(id, scaledValue) {
+        const s = document.getElementById(id);
+        if (!s) return;
+
+        const sc = sliderScale(s) || 1;
+        const raw = scaledValue / sc;
+
+        // snap raw to step
+        const step = parseFloat(s.step || "1");
+        const decimals = (String(step).includes(".") ? String(step).split(".")[1].length : 0);
+        const factor = Math.pow(10, decimals);
+        const snapped = Math.round(raw * factor) / factor;
+
+        // clamp
+        const min = parseFloat(s.min || "-9999");
+        const max = parseFloat(s.max || "9999");
+        const clamped = Math.max(min, Math.min(max, snapped));
+
+        s.value = String(clamped);
+      }
+
+      function applyPreset(presetKey) {
+        const preset = PRESETS[presetKey];
+        if (!preset) return;
+
+        // Always start from baseline so presets are consistent
+        setAllSlidersToZero();
+
+        // Apply scaled offsets
+        const entries = Object.entries(preset.values || {});
+        for (const [id, scaledVal] of entries) {
+          if (!Number.isFinite(scaledVal)) continue;
+          setSliderScaled(id, scaledVal);
+        }
+
+        // One rerank after all values are set
+        rerankAndResort();
+
+        // ✅ toast + tab focus
+        showToast(`Applied: ${preset.name} ✅`);
+        setTab("presets");
+      }
+
+      // wire buttons
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-preset]");
+        if (!btn) return;
+        const key = btn.getAttribute("data-preset");
+        applyPreset(key);
       });
 
       // ---------------- Theme toggle ----------------
@@ -2806,7 +3149,8 @@ Decrease (-): New coaching staff is valued less">
         const params = new URLSearchParams();
         allSliders.forEach(s => {
           if (!s || !s.id) return;
-          const v = Number(parseFloat(s.value || "0").toFixed(2));
+          // ✅ store the scaled offset (ex: 0.07) not the raw -10..10
+          const v = Number(sliderOffset(s).toFixed(2));
           if (Math.abs(v) > 1e-9) params.set(s.id, String(v));
         });
         return params;
@@ -2818,9 +3162,13 @@ Decrease (-): New coaching staff is valued less">
         allSliders.forEach(s => {
           if (!s || !s.id) return;
           if (!params.has(s.id)) return;
-          const v = parseFloat(params.get(s.id));
-          if (!Number.isFinite(v)) return;
-          s.value = String(v);
+
+          const scaled = parseFloat(params.get(s.id)); // ex: 0.07
+          if (!Number.isFinite(scaled)) return;
+
+          const sc = sliderScale(s) || 1;
+          const raw = scaled / sc; // ex: 0.07 / 0.01 => 7
+          s.value = String(raw);
         });
       }
 
@@ -2832,6 +3180,7 @@ Decrease (-): New coaching staff is valued less">
 
         try {
           await navigator.clipboard.writeText(url.toString());
+          showToast("Share link copied ✅");
           if (shareBtn) {
             const txt = shareBtn.querySelector('.topbtn-text');
             if (txt) {
@@ -2870,6 +3219,7 @@ Decrease (-): New coaching staff is valued less">
         a.click();
         a.remove();
         URL.revokeObjectURL(a.href);
+        showToast("Exported CSV ✅");
       }
 
       if (exportBtn) exportBtn.addEventListener('click', exportVisibleCSV);

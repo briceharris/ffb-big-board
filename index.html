@@ -1487,13 +1487,19 @@
 
       .toolbar {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 10px;
+        width: 100%;
       }
 
       .search,
       .select {
-        min-height: 42px;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 46px;
         font-size: 16px;
+        padding: 12px 14px;
       }
 
       .tabs {
@@ -1538,10 +1544,32 @@
         margin-top: 4px;
       }
 
-      thead th {
-        top: 54px;
-        font-size: 11px;
-        padding: 10px 8px;
+      table {
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      thead th,
+      tbody td {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      thead th:nth-child(1),
+      tbody td:nth-child(1) {
+        width: 64px;
+        text-align: center;
+      }
+
+      thead th:nth-child(2),
+      tbody td:nth-child(2) {
+        width: auto;
+      }
+
+      thead th:nth-child(4),
+      tbody td:nth-child(4) {
+        width: 72px;
+        text-align: center;
       }
 
       thead th:nth-child(3),
@@ -1551,11 +1579,6 @@
         display: none;
       }
 
-      tbody td {
-        padding: 9px 8px;
-        font-size: 13px;
-      }
-
       td.player {
         white-space: nowrap;
         overflow: hidden;
@@ -1563,8 +1586,10 @@
       }
 
       .pos {
-        padding: 3px 8px;
-        font-size: 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
       }
 
       .detailWrap {
@@ -1620,6 +1645,8 @@
         text-align: left;
         font-size: 10px;
       }
+
+    
   }
 
   </style>
